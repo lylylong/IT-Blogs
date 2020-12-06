@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Blogs</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>
+                <a href="/">&emsp; IT Blogs</a>
+
+            </h1>
+            <nav>
+                <a href="/">homepage &emsp;</a>
+                {{#if loggedIn}}
+                <a href="/dashboard">&emsp; dashboard &emsp;</a>
+                <button id="logout" class="btn-no-style">&emsp; logout</button>
+                {{else}}
+                <a href="/login">&emsp; dashboard &emsp;</a>
+                <a href="/login">&emsp; login &emsp;</a>
+                {{/if}}
+            </nav>
+        </header>
+
+        <main>
+            {{{ body }}}
+        </main>
+        <footer>
+            Thanks for sharing!
+        </footer>
+    </div>
+    {{#if loggedIn}}
+    <script src="/javascript/logout.js"></script>
+    {{/if}}
+</body>
+
+</html>
