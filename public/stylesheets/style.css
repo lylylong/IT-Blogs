@@ -178,7 +178,8 @@ main {
   opacity: 0.6;
 }
 
-.new-post-form input {
+.new-post-form input,
+.post_content {
   width: 300px;
 }
 
