@@ -5,6 +5,7 @@ const sequelize = require("../config/connection");
 const { Post, User, Comment } = require("../models");
 
 router.get("/", (req, res) => {
+  console.log(req.session);
   Post.findAll({
     attributes: ["id", "title", "post_content", "created_at"],
     include: [
@@ -28,16 +29,24 @@ router.get("/", (req, res) => {
       // res.render("homepage", dbPostData[0]); //只显示某个index 0的部分信息
       // res.render("homepage", dbPostData[0].get({ plain: true })); //显示index 0的所有信息
       const posts = dbPostData.map((post) => post.get({ plain: true }));
-      res.render("homepage", { posts });
-      //   res.render("homepage", {
-      //     posts,
-      //     loggedIn: req.session.loggedIn,
-      //   });
+      //   res.render("homepage", { posts });
+      res.render("homepage", {
+        posts,
+        loggedIn: req.session.loggedIn,
+      });
     })
     .catch((err) => {
       console.log(err);
       res.status(500).json(err);
     });
+});
+
+router.get("/login", (req, res) => {
+  if (req.session.loggedIn) {
+    res.redirect("/");
+    return;
+  }
+  res.render("login");
 });
 
 module.exports = router;

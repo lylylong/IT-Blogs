@@ -23,32 +23,23 @@ router.get("/:id", (req, res) => {
     where: {
       id: req.params.id,
     },
-    // include: [
-    //   {
-    //     model: Post,
-    //     attributes: ["id", "title", "post_url", "created_at"],
-    //   },
-    //   // include the Comment model here:
-    //   {
-    //     model: Comment,
-    //     attributes: ["id", "comment_text", "created_at"],
-    //     include: {
-    //       model: Post,
-    //       attributes: ["title"],
-    //     },
-    //   },
-    //   {
-    //     model: Post,
-    //     attributes: ["title"],
-    //     through: Vote,
-    //     as: "voted_posts",
-    //   },
-    // ],
+    include: [
+      {
+        model: Post,
+        attributes: ["id", "title", "post_content", "created_at"],
+      },
+      // include the Comment model here:
+      {
+        model: Comment,
+        attributes: ["id", "comment_text", "created_at"],
+        include: {
+          model: Post,
+          attributes: ["title"],
+        },
+      },
+    ],
   })
     .then((dbUserData) => {
-      // Because we're looking for one user,
-      // there's the possibility we accidentally search for a user with a nonexistent id
-      // so, if the .then() method returns nothing from the query, we send a 404 status back
       if (!dbUserData) {
         res.status(404).json({ message: "No user found with this id" });
         return;
@@ -63,24 +54,64 @@ router.get("/:id", (req, res) => {
 
 // POST /api/users
 router.post("/", (req, res) => {
-  // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
   User.create({
     username: req.body.username,
     email: req.body.email,
     password: req.body.password,
-  })
-    .then((dbUserData) => res.json(dbUserData))
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json(err);
+  }).then((dbUserData) => {
+    req.session.save(() => {
+      req.session.user_id = dbUserData.id;
+      req.session.username = dbUserData.username;
+      req.session.loggedIn = true;
+
+      res.json(dbUserData);
     });
+  });
+});
+
+router.post("/login", (req, res) => {
+  User.findOne({
+    where: {
+      email: req.body.email,
+    },
+  }).then((dbUserData) => {
+    if (!dbUserData) {
+      res.status(400).json({ message: "No user with that email address!" });
+      return;
+    }
+
+    const validPassword = dbUserData.checkPassword(req.body.password);
+
+    if (!validPassword) {
+      res.status(400).json({ message: "Incorrect password!" });
+      return;
+    }
+    // res.json({ user: dbUserData, message: "You are now logged in!" });
+    req.session.save(() => {
+      // declare session variables
+      req.session.user_id = dbUserData.id;
+      req.session.username = dbUserData.username;
+      req.session.loggedIn = true;
+
+      res.json({ user: dbUserData, message: "You are now logged in!" });
+    });
+  });
+});
+
+// log out
+router.post("/logout", (req, res) => {
+  // We can then use the destroy() method to clear the session
+  if (req.session.loggedIn) {
+    req.session.destroy(() => {
+      res.status(204).end();
+    });
+  } else {
+    res.status(404).end();
+  }
 });
 
 // PUT /api/users/1
 router.put("/:id", (req, res) => {
-  // expects {username: 'Lernantino', email: 'lernantino@gmail.com', password: 'password1234'}
-
-  // if req.body has exact key/value pairs to match the model, you can just use `req.body` instead
   User.update(req.body, {
     where: {
       id: req.params.id,
